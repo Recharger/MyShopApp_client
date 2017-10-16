@@ -16,7 +16,7 @@ public class MainActivity extends AppCompatActivity {
     private DatabaseHandler mDatabaseHelper;
 
     ArrayList<Category> categories = new ArrayList<Category>();
-    BoxAdapter boxAdapter;
+    CategoryAdapter categoryAdapter;
 
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new BottomNavigationView.OnNavigationItemSelectedListener() {
@@ -65,11 +65,11 @@ public class MainActivity extends AppCompatActivity {
     private void onCategorySelect() {
         // создаем адаптер
         fillData();
-        boxAdapter = new BoxAdapter(this, categories);
+        categoryAdapter = new CategoryAdapter(this, categories);
 
         // настраиваем список
         ListView lvMain = (ListView) findViewById(R.id.category_list);
-        lvMain.setAdapter(boxAdapter);
+        lvMain.setAdapter(categoryAdapter);
     }
 
     void fillData() {
