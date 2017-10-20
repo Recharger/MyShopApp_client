@@ -4,11 +4,17 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -49,10 +55,6 @@ public class MainActivity extends AppCompatActivity {
         mTextMessage = (TextView) findViewById(R.id.message);
         BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.navigation);
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
-
-
-        mDatabaseHelper = new DatabaseHandler(getApplicationContext());
-        //mDatabaseHelper.getWritableDatabase();
     }
 
     @Override
@@ -64,19 +66,37 @@ public class MainActivity extends AppCompatActivity {
 
     private void onCategorySelect() {
         // создаем адаптер
-        fillData();
-        categoryAdapter = new CategoryAdapter(this, categories);
+        mDatabaseHelper = new DatabaseHandler(this);
+        mDatabaseHelper.getReadableDatabase();
 
+
+
+        List<DatabaseHandler.Category> categories = mDatabaseHelper.getAllCategories(); //this is the method to query
+
+        mDatabaseHelper.close();
+        categoryAdapter = new CategoryAdapter(this, categories);
+        Toast toast = Toast.makeText(getApplicationContext(),
+                "Item " + categories.toString(), Toast.LENGTH_SHORT);
+        toast.show();
         // настраиваем список
         ListView lvMain = (ListView) findViewById(R.id.category_list);
         lvMain.setAdapter(categoryAdapter);
+
+        lvMain.setOnItemClickListener(new OnItemClickListener() {
+
+            public void onItemClick(AdapterView<?> arg0, View arg1, int position, long arg3) {
+                Toast toast = Toast.makeText(getApplicationContext(),
+                        "Item " + position, Toast.LENGTH_SHORT);
+                toast.show();
+            }
+
+            ;
+        });
     }
 
-    void fillData() {
-        for (int i = 1; i <= 20; i++) {
-            categories.add(new Category("Category " + i, R.mipmap.ic_launcher,
-                    R.mipmap.ic_launcher, "Hello, guys"));
-        }
+    void fillData(DatabaseHandler mDatabaseHelper) {
+
+
     }
 
     private void onShopListSelect() {

@@ -33,7 +33,7 @@ public class ProductAdapter extends BaseAdapter {
     // элемент по позиции
     @Override
     public Object getItem(int position) {
-        return objects.get(position);
+        return null;
     }
 
     // id по позиции

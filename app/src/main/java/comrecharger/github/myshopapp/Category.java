@@ -1,21 +1,21 @@
 package comrecharger.github.myshopapp;
 
 /**
- * Created by ygn on 16.10.17.
+ * Created by ygn on 19.10.17.
  */
 
 public class Category {
 
-    public String name;
-    public int local_image;
-    public int remote_image;
-    public String description;
+    String name;
+    int local_icon;
+    int remote_icon;
+    String description;
 
 
-    Category(String _name, int _local_image, int _remote_image, String _description) {
+    Category(String _name, int _local_icon, int _remote_icon, String _description) {
         name = _name;
-        local_image = _local_image;
-        remote_image = _remote_image;
+        local_icon = _local_icon;
+        remote_icon = _remote_icon;
         description = _description;
     }
 }
