@@ -20,6 +20,7 @@ public class MainActivity extends AppCompatActivity {
 
     private TextView mTextMessage;
     private DatabaseHandler mDatabaseHelper;
+    final String LOG_TAG = "myLogs";
 
     ArrayList<Category> categories = new ArrayList<Category>();
     CategoryAdapter categoryAdapter;
@@ -31,7 +32,7 @@ public class MainActivity extends AppCompatActivity {
         public boolean onNavigationItemSelected(@NonNull MenuItem item) {
             switch (item.getItemId()) {
                 case R.id.navigation_categories:
-                    mTextMessage.setText(R.string.title_categories);
+                    mTextMessage.setText("");
                     onCategorySelect();
                     return true;
                 case R.id.navigation_shop_list:
@@ -55,6 +56,8 @@ public class MainActivity extends AppCompatActivity {
         mTextMessage = (TextView) findViewById(R.id.message);
         BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.navigation);
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
+
+        onCategorySelect();
     }
 
     @Override
@@ -75,19 +78,15 @@ public class MainActivity extends AppCompatActivity {
 
         mDatabaseHelper.close();
         categoryAdapter = new CategoryAdapter(this, categories);
-        Toast toast = Toast.makeText(getApplicationContext(),
-                "Item " + categories.toString(), Toast.LENGTH_SHORT);
-        toast.show();
+
         // настраиваем список
         ListView lvMain = (ListView) findViewById(R.id.category_list);
         lvMain.setAdapter(categoryAdapter);
 
         lvMain.setOnItemClickListener(new OnItemClickListener() {
-
-            public void onItemClick(AdapterView<?> arg0, View arg1, int position, long arg3) {
-                Toast toast = Toast.makeText(getApplicationContext(),
-                        "Item " + position, Toast.LENGTH_SHORT);
-                toast.show();
+            public void onItemClick(AdapterView<?> arg0, View arg1, int position, long id) {
+                Log.d(LOG_TAG, "itemSelect: position = " + position + ", id = "
+                        + id);
             }
 
             ;
@@ -100,6 +99,19 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void onShopListSelect() {
+        mDatabaseHelper = new DatabaseHandler(this);
+        mDatabaseHelper.getReadableDatabase();
+
+
+
+        List<DatabaseHandler.Category> categories = mDatabaseHelper.getAllCategories(); //this is the method to query
+
+        mDatabaseHelper.close();
+        categoryAdapter = new CategoryAdapter(this, categories);
+
+        // настраиваем список
+        ListView lvMain = (ListView) findViewById(R.id.category_list);
+        lvMain.setAdapter(categoryAdapter);
 
     }
 

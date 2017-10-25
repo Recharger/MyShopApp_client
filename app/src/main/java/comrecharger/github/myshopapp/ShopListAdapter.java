@@ -1,29 +1,31 @@
 package comrecharger.github.myshopapp;
 
-import java.util.ArrayList;
-import java.util.List;
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class CategoryAdapter extends BaseAdapter {
+import java.util.List;
+
+/**
+ * Created by ygn on 25.10.17.
+ */
+
+public class ShopListAdapter extends BaseAdapter {
     Context ctx;
     LayoutInflater lInflater;
-    List<DatabaseHandler.Category> categories;
-    ListView categoryItem;
+    List<DatabaseHandler.ShopListItem> shopList;
+    ListView shopListItem;
 
-    CategoryAdapter(Context context, List<DatabaseHandler.Category> categoriesList) {
+    ShopListAdapter(Context context, List<DatabaseHandler.ShopListItem> shopListInput) {
         ctx = context;
-        categories = categoriesList;
+        shopList = shopListInput;
         lInflater = (LayoutInflater) ctx
                 .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
     }
@@ -31,13 +33,13 @@ public class CategoryAdapter extends BaseAdapter {
     // кол-во элементов
     @Override
     public int getCount() {
-        return categories.size();
+        return shopList.size();
     }
 
     // элемент по позиции
     @Override
     public Object getItem(int position) {
-        return categories.get(position);
+        return shopList.get(position);
     }
 
     // id по позиции
@@ -55,16 +57,16 @@ public class CategoryAdapter extends BaseAdapter {
             view = lInflater.inflate(R.layout.category_item, parent, false);
         }
 
-        DatabaseHandler.Category c = getProduct(position);
+        DatabaseHandler.ShopListItem c = getProduct(position);
 
         // заполняем View в пункте списка данными из товаров: наименование, цена
         // и картинка
-        ((TextView) view.findViewById(R.id.category_name)).setText(c.getName());
-        ((ImageView) view.findViewById(R.id.category_icon)).setImageResource(c.getLocalIcon());
+//        ((TextView) view.findViewById(R.id.category_name)).setText(c.getName());
+//        ((ImageView) view.findViewById(R.id.category_icon)).setImageResource(c.getLocalIcon());
         return view;
     }
 
-    OnClickListener myCheckChangeList = new OnClickListener() {
+    View.OnClickListener myCheckChangeList = new View.OnClickListener() {
         public void onClick(View v) {
             Toast toast = Toast.makeText(ctx,
                     "Пора покормить кота!", Toast.LENGTH_SHORT);
@@ -83,7 +85,7 @@ public class CategoryAdapter extends BaseAdapter {
 
 
     // товар по позиции
-    DatabaseHandler.Category getProduct(int position) {
-        return ((DatabaseHandler.Category) getItem(position));
+    DatabaseHandler.ShopListItem getProduct(int position) {
+        return ((DatabaseHandler.ShopListItem) getItem(position));
     }
 }

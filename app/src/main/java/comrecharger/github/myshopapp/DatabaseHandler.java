@@ -3,9 +3,13 @@ package comrecharger.github.myshopapp;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteDatabase;
+import android.util.FloatProperty;
+import android.util.Log;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,6 +34,7 @@ class DatabaseHandler extends SQLiteOpenHelper {
     private static final String KEY_PRODUCT_NAME = "product_name";
     private static final String KEY_PRICE = "price";
     private static final String KEY_IS_AVAILABLE= "is_available";
+    private static final String KEY_CATEGORY_ID = "category_id";
 
     //Shopping List table
     private static final String TABLE_SHOP_LIST = "shop_list";
@@ -98,11 +103,12 @@ class DatabaseHandler extends SQLiteOpenHelper {
         private String description;
         private Float price;
         private boolean is_available;
+        private int category_id;
 
         public Product()
         {
         }
-        public Product(int id, String name, int local_icon, int remote_icon, String description, Float price, Boolean is_available)
+        public Product(int id, String name, int local_icon, int remote_icon, String description, Float price, Boolean is_available, int category_id)
         {
             this.id=id;
             this.name=name;
@@ -111,6 +117,7 @@ class DatabaseHandler extends SQLiteOpenHelper {
             this.description=description;
             this.price=price;
             this.is_available=is_available;
+            this.category_id=category_id;
         }
         public void setId(int id) {
             this.id = id;
@@ -139,6 +146,10 @@ class DatabaseHandler extends SQLiteOpenHelper {
             this.is_available = is_available;
         }
 
+        public void setCategoryId(int category_id) {
+            this.category_id = category_id;
+        }
+
         public int getId() {
             return id;
         }
@@ -159,6 +170,9 @@ class DatabaseHandler extends SQLiteOpenHelper {
         }
         public Boolean getAvailableStatus() {
             return is_available;
+        }
+        public int getCategoryId() {
+            return category_id;
         }
     }
     public class ShopListItem {
@@ -222,13 +236,13 @@ class DatabaseHandler extends SQLiteOpenHelper {
                 + KEY_REMOTE_ICON + " text,"
                 + KEY_DESCRIPTION + " text,"
                 + KEY_PRICE + " real,"
-                + KEY_IS_AVAILABLE + " integer);");
+                + KEY_IS_AVAILABLE + " integer,"
+                + KEY_CATEGORY_ID + " integer);");
         db.execSQL("create table " + TABLE_SHOP_LIST + "(" + KEY_ID
                 + " integer primary key,"
                 + KEY_PRODUCT_ID + " integer,"
                 + KEY_NUMBER_OF_ITEMS + " integer,"
                 + KEY_LAST_MODIFIED + " text);");
-        fillData();
     }
 
 
@@ -252,6 +266,7 @@ class DatabaseHandler extends SQLiteOpenHelper {
         values.put(KEY_DESCRIPTION, product.getDescription());
         values.put(KEY_PRICE, product.getPrice());
         values.put(KEY_IS_AVAILABLE, product.getAvailableStatus());
+        values.put(KEY_CATEGORY_ID, product.getCategoryId());
 
 
         db.insert(TABLE_PRODUCTS, null, values);
@@ -283,12 +298,19 @@ class DatabaseHandler extends SQLiteOpenHelper {
     public Product getProduct(int id) {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.query(TABLE_PRODUCTS, new String[] { KEY_ID,
-                        KEY_PRODUCT_NAME, KEY_LOCAL_ICON, KEY_REMOTE_ICON, KEY_DESCRIPTION, KEY_PRICE, KEY_IS_AVAILABLE }, KEY_ID + "=?",
+                        KEY_PRODUCT_NAME, KEY_LOCAL_ICON, KEY_REMOTE_ICON, KEY_DESCRIPTION, KEY_PRICE, KEY_IS_AVAILABLE, KEY_CATEGORY_ID }, KEY_ID + "=?",
                 new String[] { String.valueOf(id) }, null, null, null, null);
         if (cursor != null)
             cursor.moveToFirst();
         Product contact = new Product(Integer.parseInt(cursor.getString(0)),
-                cursor.getString(1), Integer.parseInt(cursor.getString(2)), Integer.parseInt(cursor.getString(3)), cursor.getString(4), Float.parseFloat(cursor.getString(5)), Boolean.parseBoolean(cursor.getString(6)));
+                cursor.getString(1),
+                Integer.parseInt(cursor.getString(2)),
+                Integer.parseInt(cursor.getString(3)),
+                cursor.getString(4),
+                Float.parseFloat(cursor.getString(5)),
+                Boolean.parseBoolean(cursor.getString(6)),
+                Integer.parseInt(cursor.getString(7))
+        );
 
         return contact;
     }
@@ -307,7 +329,6 @@ class DatabaseHandler extends SQLiteOpenHelper {
 
     public List<Category> getAllCategories() {
         List<Category> categoryList = new ArrayList<Category>();
-
         String selectQuery = "SELECT * FROM " + TABLE_CATEGORIES;
         SQLiteDatabase db = this.getWritableDatabase();
         Cursor cursor = db.rawQuery(selectQuery, null);
@@ -344,6 +365,7 @@ class DatabaseHandler extends SQLiteOpenHelper {
                 product.setDescription(cursor.getString(4));
                 product.setPrice(Float.parseFloat(cursor.getString(5)));
                 product.setAvailableStatus(Boolean.parseBoolean(cursor.getString(6)));
+                product.setCategoryId(Integer.parseInt(cursor.getString(7)));
 
                 productsList.add(product);
             } while (cursor.moveToNext());
@@ -393,6 +415,7 @@ class DatabaseHandler extends SQLiteOpenHelper {
         values.put(KEY_DESCRIPTION, product.getDescription());
         values.put(KEY_PRICE, product.getPrice());
         values.put(KEY_IS_AVAILABLE, product.getAvailableStatus());
+        values.put(KEY_CATEGORY_ID, product.getCategoryId());
 
 // updating row
         return db.update(TABLE_PRODUCTS, values, KEY_ID + " = ?",
@@ -428,6 +451,32 @@ class DatabaseHandler extends SQLiteOpenHelper {
         db.close();
     }
 
+    public List<Product> getProductsWithID(int id) {
+        List<Product> productsList = new ArrayList<Product>();
+
+        String selectQuery = "SELECT * FROM " + TABLE_PRODUCTS + " WHERE " + KEY_CATEGORY_ID + " = " + id;
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor cursor = db.rawQuery(selectQuery, null);
+
+        if (cursor.moveToFirst()) {
+            do {
+                Product product = new Product();
+                product.setId(Integer.parseInt(cursor.getString(0)));
+                product.setName(cursor.getString(1));
+                product.setLocalIcon(Integer.parseInt(cursor.getString(2)));
+                product.setRemoteIcon(Integer.parseInt(cursor.getString(3)));
+                product.setDescription(cursor.getString(4));
+                product.setPrice(Float.parseFloat(cursor.getString(5)));
+                product.setAvailableStatus(Boolean.parseBoolean(cursor.getString(6)));
+                product.setCategoryId(Integer.parseInt(cursor.getString(7)));
+
+                productsList.add(product);
+            } while (cursor.moveToNext());
+        }
+
+        return productsList;
+    }
+
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         db.execSQL("drop table if exists " + TABLE_CATEGORIES);
@@ -436,9 +485,82 @@ class DatabaseHandler extends SQLiteOpenHelper {
     }
 
     private void fillData() {
-        addCategory(new Category(0, "CPU", 123456, 123456, "Salam ebatb"));
-        addCategory(new Category(1, "RAM", 123456, 123456, "Salam ebatb"));
-        addCategory(new Category(2, "HDD", 123456, 123456, "Salam ebatb"));
-        addCategory(new Category(3, "SSD", 123456, 123456, "Salam ebatb"));
+        addCategory(new Category(0, "CPU", R.drawable.cpu, -1, "Central processing unit"));
+        addCategory(new Category(1, "RAM", R.drawable.ram, -1, "Random access memory"));
+        addCategory(new Category(2, "Motherboard", R.drawable.motherboard, -1, "The heart of the computer"));
+        addCategory(new Category(3, "HDD", R.drawable.hdd, -1, "Hard Disk Drive"));
+        addCategory(new Category(4, "SSD", R.drawable.ssd, -1, "Solid State Drive"));
+        addCategory(new Category(5, "USB Storage", R.drawable.usb, -1, "Related products"));
+        addCategory(new Category(6, "Power Supply", R.drawable.power, -1, "Long live, PC"));
+        addProduct(new Product(0, "CPU1", R.drawable.cpu_0, -1, "Salam ebatb123", Float.parseFloat("84.04"), true, 0));
+        addProduct(new Product(1, "CPU2", R.drawable.cpu_1, -1, "Salam ebatb346", Float.parseFloat("184.04"), true, 0));
+        addProduct(new Product(2, "CPU3", R.drawable.cpu_2, -1, "Salam ebatb1432", Float.parseFloat("284.04"), true, 0));
+        addProduct(new Product(3, "CPU4", R.drawable.cpu_3, -1, "Salam ebatb235523", Float.parseFloat("384.04"), true, 0));
+        addProduct(new Product(4, "CPU5", R.drawable.cpu_4, -1, "Salam ebatb235523", Float.parseFloat("384.04"), true, 0));
+        addProduct(new Product(5, "CPU6", R.drawable.cpu_5, -1, "Salam ebatb235523", Float.parseFloat("384.04"), true, 0));
+        addProduct(new Product(6, "CPU7", R.drawable.cpu_6, -1, "Salam ebatb235523", Float.parseFloat("384.04"), true, 0));
+        addProduct(new Product(7, "CPU8", R.drawable.cpu_7, -1, "Salam ebatb235523", Float.parseFloat("384.04"), true, 0));
+        addProduct(new Product(8, "CPU9", R.drawable.cpu_8, -1, "Salam ebatb235523", Float.parseFloat("384.04"), true, 0));
+        addProduct(new Product(9, "CPU10", R.drawable.cpu_9, -1, "Salam ebatb123", Float.parseFloat("84.04"), true, 0));
+        addProduct(new Product(10, "RAM1", R.drawable.ram_0, -1, "Salam ebatb346", Float.parseFloat("184.04"), true, 1));
+        addProduct(new Product(11, "RAM2", R.drawable.ram_1, -1, "Salam ebatb1432", Float.parseFloat("284.04"), true, 1));
+        addProduct(new Product(12, "RAM3", R.drawable.ram_2, -1, "Salam ebatb235523", Float.parseFloat("384.04"), true, 1));
+        addProduct(new Product(13, "RAM4", R.drawable.ram_3, -1, "Salam ebatb346", Float.parseFloat("184.04"), true, 1));
+        addProduct(new Product(14, "RAM5", R.drawable.ram_4, -1, "Salam ebatb1432", Float.parseFloat("284.04"), true, 1));
+        addProduct(new Product(15, "RAM6", R.drawable.ram_5, -1, "Salam ebatb235523", Float.parseFloat("384.04"), true, 1));
+        addProduct(new Product(16, "RAM7", R.drawable.ram_6, -1, "Description", Float.parseFloat("184.04"), true, 1));
+        addProduct(new Product(17, "RAM8", R.drawable.ram_7, -1, "Description", Float.parseFloat("284.04"), true, 1));
+        addProduct(new Product(18, "RAM9", R.drawable.ram_8, -1, "Description", Float.parseFloat("384.04"), true, 1));
+        addProduct(new Product(19, "RAM10", R.drawable.ram_9, -1, "Description", Float.parseFloat("184.04"), true, 1));
+        addProduct(new Product(20, "Motherboard1", R.drawable.motherboard_0, -1, "Description", Float.parseFloat("284.04"), true, 2));
+        addProduct(new Product(21, "Motherboard2", R.drawable.motherboard_1, -1, "Description", Float.parseFloat("384.04"), true, 2));
+        addProduct(new Product(22, "Motherboard3", R.drawable.motherboard_2, -1, "Description", Float.parseFloat("284.04"), true, 2));
+        addProduct(new Product(23, "Motherboard4", R.drawable.motherboard_3, -1, "Description", Float.parseFloat("384.04"), true, 2));
+        addProduct(new Product(24, "Motherboard5", R.drawable.motherboard_4, -1, "Description", Float.parseFloat("284.04"), true, 2));
+        addProduct(new Product(25, "Motherboard6", R.drawable.motherboard_5, -1, "Description", Float.parseFloat("384.04"), true, 2));
+        addProduct(new Product(26, "Motherboard7", R.drawable.motherboard_6, -1, "Description", Float.parseFloat("284.04"), true, 2));
+        addProduct(new Product(27, "Motherboard8", R.drawable.motherboard_7, -1, "Description", Float.parseFloat("384.04"), true, 2));
+        addProduct(new Product(28, "Motherboard9", R.drawable.motherboard_8, -1, "Description", Float.parseFloat("284.04"), true, 2));
+        addProduct(new Product(29, "Motherboard10", R.drawable.motherboard_9, -1, "Description", Float.parseFloat("384.04"), true, 2));
+        addProduct(new Product(30, "HDD1", R.drawable.hdd_0, -1, "Description", Float.parseFloat("384.04"), true, 3));
+        addProduct(new Product(31, "HDD2", R.drawable.hdd_1, -1, "Description", Float.parseFloat("384.04"), true, 3));
+        addProduct(new Product(32, "HDD3", R.drawable.hdd_2, -1, "Description", Float.parseFloat("384.04"), true, 3));
+        addProduct(new Product(33, "HDD4", R.drawable.hdd_3, -1, "Description", Float.parseFloat("384.04"), true, 3));
+        addProduct(new Product(34, "HDD5", R.drawable.hdd_4, -1, "Description", Float.parseFloat("384.04"), true, 3));
+        addProduct(new Product(35, "HDD6", R.drawable.hdd_5, -1, "Description", Float.parseFloat("384.04"), true, 3));
+        addProduct(new Product(36, "HDD7", R.drawable.hdd_6, -1, "Description", Float.parseFloat("384.04"), true, 3));
+        addProduct(new Product(37, "HDD8", R.drawable.hdd_7, -1, "Description", Float.parseFloat("384.04"), true, 3));
+        addProduct(new Product(38, "HDD9", R.drawable.hdd_8, -1, "Description", Float.parseFloat("384.04"), true, 3));
+        addProduct(new Product(39, "HDD10", R.drawable.hdd_9, -1, "Description", Float.parseFloat("384.04"), true, 3));
+        addProduct(new Product(40, "SSD1", R.drawable.ssd_0, -1, "Description", Float.parseFloat("384.04"), true, 4));
+        addProduct(new Product(41, "SSD2", R.drawable.ssd_1, -1, "Description", Float.parseFloat("384.04"), true, 4));
+        addProduct(new Product(42, "SSD3", R.drawable.ssd_2, -1, "Description", Float.parseFloat("384.04"), true, 4));
+        addProduct(new Product(43, "SSD4", R.drawable.ssd_3, -1, "Description", Float.parseFloat("384.04"), true, 4));
+        addProduct(new Product(44, "SSD5", R.drawable.ssd_4, -1, "Description", Float.parseFloat("384.04"), true, 4));
+        addProduct(new Product(45, "SSD6", R.drawable.ssd_5, -1, "Description", Float.parseFloat("384.04"), true, 4));
+        addProduct(new Product(46, "SSD7", R.drawable.ssd_6, -1, "Description", Float.parseFloat("384.04"), true, 4));
+        addProduct(new Product(47, "SSD8", R.drawable.ssd_7, -1, "Description", Float.parseFloat("384.04"), true, 4));
+        addProduct(new Product(48, "SSD9", R.drawable.ssd_8, -1, "Description", Float.parseFloat("384.04"), true, 4));
+        addProduct(new Product(49, "SSD10", R.drawable.ssd_9, -1, "Description", Float.parseFloat("384.04"), true, 4));
+        addProduct(new Product(50, "USB Flash Drive 1", R.drawable.usb_0, -1, "Description", Float.parseFloat("384.04"), true, 5));
+        addProduct(new Product(51, "USB Flash Drive 2", R.drawable.usb_1, -1, "Description", Float.parseFloat("384.04"), true, 5));
+        addProduct(new Product(52, "USB Flash Drive 3", R.drawable.usb_2, -1, "Description", Float.parseFloat("384.04"), true, 5));
+        addProduct(new Product(53, "USB Flash Drive 4", R.drawable.usb_3, -1, "Description", Float.parseFloat("384.04"), true, 5));
+        addProduct(new Product(54, "USB Flash Drive 5", R.drawable.usb_4, -1, "Description", Float.parseFloat("384.04"), true, 5));
+        addProduct(new Product(55, "USB Flash Drive 6", R.drawable.usb_5, -1, "Description", Float.parseFloat("384.04"), true, 5));
+        addProduct(new Product(56, "USB Flash Drive 7", R.drawable.usb_6, -1, "Description", Float.parseFloat("384.04"), true, 5));
+        addProduct(new Product(57, "USB Flash Drive 8", R.drawable.usb_7, -1, "Description", Float.parseFloat("384.04"), true, 5));
+        addProduct(new Product(58, "USB Flash Drive 9", R.drawable.usb_8, -1, "Description", Float.parseFloat("384.04"), true, 5));
+        addProduct(new Product(59, "USB Flash Drive 10", R.drawable.usb_9, -1, "Description", Float.parseFloat("384.04"), true, 5));
+        addProduct(new Product(60, "Power Supply 1", R.drawable.power_0, -1, "Description", Float.parseFloat("384.04"), true, 6));
+        addProduct(new Product(61, "Power Supply 2", R.drawable.power_1, -1, "Description", Float.parseFloat("384.04"), true, 6));
+        addProduct(new Product(62, "Power Supply 3", R.drawable.power_2, -1, "Description", Float.parseFloat("384.04"), true, 6));
+        addProduct(new Product(63, "Power Supply 4", R.drawable.power_3, -1, "Description", Float.parseFloat("384.04"), true, 6));
+        addProduct(new Product(64, "Power Supply 5", R.drawable.power_4, -1, "Description", Float.parseFloat("384.04"), true, 6));
+        addProduct(new Product(65, "Power Supply 6", R.drawable.power_5, -1, "Description", Float.parseFloat("384.04"), true, 6));
+        addProduct(new Product(66, "Power Supply 7", R.drawable.power_6, -1, "Description", Float.parseFloat("384.04"), true, 6));
+        addProduct(new Product(67, "Power Supply 8", R.drawable.power_7, -1, "Description", Float.parseFloat("384.04"), true, 6));
+        addProduct(new Product(68, "Power Supply 9", R.drawable.power_8, -1, "Description", Float.parseFloat("384.04"), true, 6));
+        addProduct(new Product(69, "Power Supply 10", R.drawable.power_9, -1, "Description", Float.parseFloat("384.04"), true, 6));
     }
 }
