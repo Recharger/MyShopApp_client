@@ -1,5 +1,6 @@
 package comrecharger.github.myshopapp;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
@@ -17,13 +18,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
-
+    public static final String EXTRA_MESSAGE = "category_id";
     private TextView mTextMessage;
     private DatabaseHandler mDatabaseHelper;
     final String LOG_TAG = "myLogs";
+    public static int current_category;
+    private static ArrayList<DatabaseHandler.Product> recent = new ArrayList<DatabaseHandler.Product>();
 
-    ArrayList<Category> categories = new ArrayList<Category>();
     CategoryAdapter categoryAdapter;
+    ShopListAdapter shopListAdapter;
 
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new BottomNavigationView.OnNavigationItemSelectedListener() {
@@ -36,7 +39,6 @@ public class MainActivity extends AppCompatActivity {
                     onCategorySelect();
                     return true;
                 case R.id.navigation_shop_list:
-                    mTextMessage.setText(R.string.title_shop_list);
                     onShopListSelect();
                     return true;
                 case R.id.navigation_about:
@@ -71,7 +73,7 @@ public class MainActivity extends AppCompatActivity {
         // создаем адаптер
         mDatabaseHelper = new DatabaseHandler(this);
         mDatabaseHelper.getReadableDatabase();
-
+        mTextMessage.setText("");
 
 
         List<DatabaseHandler.Category> categories = mDatabaseHelper.getAllCategories(); //this is the method to query
@@ -87,6 +89,9 @@ public class MainActivity extends AppCompatActivity {
             public void onItemClick(AdapterView<?> arg0, View arg1, int position, long id) {
                 Log.d(LOG_TAG, "itemSelect: position = " + position + ", id = "
                         + id);
+                Intent intent = new Intent(getApplicationContext(), ProductListActivity.class);
+                current_category = position;
+                startActivity(intent);
             }
 
             ;
@@ -102,19 +107,30 @@ public class MainActivity extends AppCompatActivity {
         mDatabaseHelper = new DatabaseHandler(this);
         mDatabaseHelper.getReadableDatabase();
 
+        List<DatabaseHandler.ShopListItem> shopListItems = mDatabaseHelper.getShopListItems(); //this is the method to query
 
-
-        List<DatabaseHandler.Category> categories = mDatabaseHelper.getAllCategories(); //this is the method to query
+        Log.d(LOG_TAG, "Shop list filling: " + shopListItems);
 
         mDatabaseHelper.close();
-        categoryAdapter = new CategoryAdapter(this, categories);
+        shopListAdapter = new ShopListAdapter(this, shopListItems);
 
-        // настраиваем список
+
         ListView lvMain = (ListView) findViewById(R.id.category_list);
-        lvMain.setAdapter(categoryAdapter);
+        lvMain.setAdapter(shopListAdapter);
 
     }
 
+    public static int getCurrentCategory() {
+        return current_category;
+    }
+
+    public static void addRecentProduct(DatabaseHandler.Product product) {
+        recent.add(product);
+    }
+
+    public static ArrayList<DatabaseHandler.Product> getRecentProducts() {
+        return recent;
+    }
 
     private void onAboutSelect() {
 

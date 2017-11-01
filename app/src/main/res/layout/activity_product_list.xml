@@ -1,21 +1,55 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="comrecharger.github.myshopapp.ProductListActivity">
+    android:orientation="vertical"
+    tools:context="comrecharger.github.myshopapp.ProductListActivity"
+    android:weightSum="1">
 
+    <LinearLayout
+        android:id="@+id/content"
+        android:layout_width="match_parent"
+        android:layout_height="425dp"
+        android:orientation="vertical">
+
+        <ListView
+            android:id="@+id/product_list"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="visible" />
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/recent_textview"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Recent: "
+        android:visibility="invisible"/>
     <ListView
-        android:layout_width="368dp"
-        android:layout_height="90dp"
-        tools:layout_editor_absoluteX="8dp"
-        tools:layout_editor_absoluteY="8dp" />
+        android:id="@+id/recent_products"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="invisible" />
 
-    <ListView
-        android:layout_width="368dp"
-        android:layout_height="405dp"
-        tools:layout_editor_absoluteX="8dp"
-        tools:layout_editor_absoluteY="98dp" />
+    <android.support.v4.view.ViewPager
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/pager"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
 
-</android.support.constraint.ConstraintLayout>
+
+    <android.support.design.widget.BottomNavigationView
+        android:id="@+id/navigation"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:background="?android:attr/windowBackground"
+        app:menu="@menu/navigation"
+        tools:layout_editor_absoluteY="33dp"
+        tools:layout_editor_absoluteX="236dp" />
+</LinearLayout>
+

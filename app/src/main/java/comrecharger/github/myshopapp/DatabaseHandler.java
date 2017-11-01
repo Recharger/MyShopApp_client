@@ -7,10 +7,13 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteDatabase;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.util.FloatProperty;
 import android.util.Log;
 import android.widget.Toast;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,7 +32,6 @@ class DatabaseHandler extends SQLiteOpenHelper {
     private static final String TABLE_CATEGORIES = "categories";
     private static final String KEY_CATEGORY_NAME = "category_name";
 
-    //Product table
     private static final String TABLE_PRODUCTS = "products";
     private static final String KEY_PRODUCT_NAME = "product_name";
     private static final String KEY_PRICE = "price";
@@ -95,7 +97,7 @@ class DatabaseHandler extends SQLiteOpenHelper {
             return description;
         }
     }
-    public class Product {
+    public static class Product implements Parcelable {
         private int id;
         private String name;
         private int local_icon;
@@ -119,6 +121,19 @@ class DatabaseHandler extends SQLiteOpenHelper {
             this.is_available=is_available;
             this.category_id=category_id;
         }
+
+
+        public Product(Parcel in) {
+            this.id=in.readInt();
+            this.name=in.readString();
+            this.local_icon=in.readInt();
+            this.remote_icon=in.readInt();
+            this.description=in.readString();
+            this.price=in.readFloat();
+            this.is_available= (in.readInt() == 1);
+            this.category_id=in.readInt();
+        }
+
         public void setId(int id) {
             this.id = id;
         }
@@ -174,22 +189,52 @@ class DatabaseHandler extends SQLiteOpenHelper {
         public int getCategoryId() {
             return category_id;
         }
+
+        @Override
+        public int describeContents() {
+            return 0;
+        }
+
+        @Override
+        public void writeToParcel(Parcel dest, int flags) {
+            dest.writeInt(id);
+            dest.writeString(name);
+            dest.writeInt(local_icon);
+            dest.writeInt(remote_icon);
+            dest.writeString(description);
+            dest.writeFloat(price);
+            dest.writeInt((is_available) ? 1 : 0);
+            dest.writeInt(category_id);
+
+        }
+
+        public static final Parcelable.Creator<Product> CREATOR = new Parcelable.Creator<Product>()
+        {
+            public Product createFromParcel(Parcel in)
+            {
+                return new Product(in);
+            }
+            public Product[] newArray(int size)
+            {
+                return new Product[size];
+            }
+        };
     }
-    public class ShopListItem {
+    public static class ShopListItem {
         private int id;
         private int product_id;
         private int number_of_items;
-        private String last_modified;
+//        private String last_modified;
 
         public ShopListItem()
         {
         }
-        public ShopListItem(int id, int product_id, int number_of_items, String last_modified)
+        public ShopListItem(int id, int product_id, int number_of_items)
         {
             this.id=id;
             this.product_id=product_id;
             this.number_of_items=number_of_items;
-            this.last_modified=last_modified;
+//            this.last_modified=last_modified;
         }
         public void setId(int id) {
             this.id = id;
@@ -200,9 +245,9 @@ class DatabaseHandler extends SQLiteOpenHelper {
         public void setNumberOfItems(int number_of_items) {
             this.number_of_items = number_of_items;
         }
-        public void setLastModified(String last_modified) {
-            this.last_modified = last_modified;
-        }
+//        public void setLastModified(String last_modified) {
+//            this.last_modified = last_modified;
+//        }
         public int getId() {
             return id;
         }
@@ -212,9 +257,9 @@ class DatabaseHandler extends SQLiteOpenHelper {
         public int getNumberOfItems() {
             return number_of_items;
         }
-        public String getLastModified() {
-            return last_modified;
-        }
+//        public String getLastModified() {
+//            return last_modified;
+//        }
     }
 
     public DatabaseHandler(Context context) {
@@ -241,8 +286,7 @@ class DatabaseHandler extends SQLiteOpenHelper {
         db.execSQL("create table " + TABLE_SHOP_LIST + "(" + KEY_ID
                 + " integer primary key,"
                 + KEY_PRODUCT_ID + " integer,"
-                + KEY_NUMBER_OF_ITEMS + " integer,"
-                + KEY_LAST_MODIFIED + " text);");
+                + KEY_NUMBER_OF_ITEMS + " integer);");
     }
 
 
@@ -277,7 +321,7 @@ class DatabaseHandler extends SQLiteOpenHelper {
         ContentValues values = new ContentValues();
         values.put(KEY_PRODUCT_ID, item.getProductId());
         values.put(KEY_NUMBER_OF_ITEMS, item.getNumberOfItems());
-        values.put(KEY_LAST_MODIFIED, item.getLastModified());
+//        values.put(KEY_LAST_MODIFIED, item.getLastModified());
 
         db.insert(TABLE_SHOP_LIST, null, values);
         db.close();
@@ -322,7 +366,7 @@ class DatabaseHandler extends SQLiteOpenHelper {
         if (cursor != null)
             cursor.moveToFirst();
         ShopListItem contact = new ShopListItem(Integer.parseInt(cursor.getString(0)),
-                Integer.parseInt(cursor.getString(1)), Integer.parseInt(cursor.getString(2)), cursor.getString(3));
+                Integer.parseInt(cursor.getString(1)), Integer.parseInt(cursor.getString(2)));
 
         return contact;
     }
@@ -376,7 +420,7 @@ class DatabaseHandler extends SQLiteOpenHelper {
     public List<ShopListItem> getShopListItems() {
         List<ShopListItem> shopListItems = new ArrayList<ShopListItem>();
 
-        String selectQuery = "SELECT * FROM " + TABLE_CATEGORIES;
+        String selectQuery = "SELECT * FROM " + TABLE_SHOP_LIST;
         SQLiteDatabase db = this.getWritableDatabase();
         Cursor cursor = db.rawQuery(selectQuery, null);
 
@@ -386,7 +430,7 @@ class DatabaseHandler extends SQLiteOpenHelper {
                 shopListItem.setId(Integer.parseInt(cursor.getString(0)));
                 shopListItem.setProductId(Integer.parseInt(cursor.getString(1)));
                 shopListItem.setNumberOfItems(Integer.parseInt(cursor.getString(2)));
-                shopListItem.setLastModified(cursor.getString(3));
+//                shopListItem.setLastModified(cursor.getString(3));
 
                 shopListItems.add(shopListItem);
             } while (cursor.moveToNext());
@@ -426,7 +470,7 @@ class DatabaseHandler extends SQLiteOpenHelper {
         ContentValues values = new ContentValues();
         values.put(KEY_PRODUCT_ID, listItem.getProductId());
         values.put(KEY_NUMBER_OF_ITEMS, listItem.getNumberOfItems());
-        values.put(KEY_LAST_MODIFIED, listItem.getLastModified());
+//        values.put(KEY_LAST_MODIFIED, listItem.getLastModified());
 
         return db.update(TABLE_SHOP_LIST, values, KEY_ID + " = ?",
                 new String[]{String.valueOf(listItem.getId())});
@@ -451,10 +495,10 @@ class DatabaseHandler extends SQLiteOpenHelper {
         db.close();
     }
 
-    public List<Product> getProductsWithID(int id) {
+    public List<Product> getProductsByCategory(int category_id) {
         List<Product> productsList = new ArrayList<Product>();
 
-        String selectQuery = "SELECT * FROM " + TABLE_PRODUCTS + " WHERE " + KEY_CATEGORY_ID + " = " + id;
+        String selectQuery = "SELECT * FROM " + TABLE_PRODUCTS + " WHERE " + KEY_CATEGORY_ID + " = " + category_id;
         SQLiteDatabase db = this.getWritableDatabase();
         Cursor cursor = db.rawQuery(selectQuery, null);
 
@@ -473,8 +517,51 @@ class DatabaseHandler extends SQLiteOpenHelper {
                 productsList.add(product);
             } while (cursor.moveToNext());
         }
-
         return productsList;
+    }
+    public Product getProductById(int id) {
+        Product product = null;
+        List<Product> productsList = new ArrayList<Product>();
+
+        String selectQuery = "SELECT * FROM " + TABLE_PRODUCTS + " WHERE " + KEY_ID + " = " + id;
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor cursor = db.rawQuery(selectQuery, null);
+
+        if (cursor.moveToFirst()) {
+            do {
+                product = new Product();
+                product.setId(Integer.parseInt(cursor.getString(0)));
+                product.setName(cursor.getString(1));
+                product.setLocalIcon(Integer.parseInt(cursor.getString(2)));
+                product.setRemoteIcon(Integer.parseInt(cursor.getString(3)));
+                product.setDescription(cursor.getString(4));
+                product.setPrice(Float.parseFloat(cursor.getString(5)));
+                product.setAvailableStatus(Boolean.parseBoolean(cursor.getString(6)));
+                product.setCategoryId(Integer.parseInt(cursor.getString(7)));
+            } while (cursor.moveToNext());
+        }
+
+        return product;
+    }
+
+    public boolean ifShopListItemExists(int id) {
+        try {
+            SQLiteDatabase db = this.getReadableDatabase();
+            Cursor cursor = db.query(TABLE_CATEGORIES, new String[] { KEY_ID,
+                            KEY_PRODUCT_ID, KEY_NUMBER_OF_ITEMS, KEY_LAST_MODIFIED }, KEY_ID + "=?",
+                    new String[] { String.valueOf(id) }, null, null, null, null);
+            if (cursor != null)
+                cursor.moveToFirst();
+            ShopListItem contact = new ShopListItem(Integer.parseInt(cursor.getString(0)),
+                    Integer.parseInt(cursor.getString(1)), Integer.parseInt(cursor.getString(2)));
+
+            if (contact != null) {
+                return true;
+            };
+            return false;
+        } catch (Exception exception) {
+            return false;
+        }
     }
 
     @Override

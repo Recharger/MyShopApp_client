@@ -1,37 +1,40 @@
 package comrecharger.github.myshopapp;
 
-import java.util.List;
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
-import android.widget.ListView;
 import android.widget.TextView;
 
-public class CategoryAdapter extends BaseAdapter {
+import java.util.List;
+
+/**
+ * Created by ygn on 31.10.17.
+ */
+
+public class RecentAdapter extends BaseAdapter {
     private Context ctx;
     private LayoutInflater lInflater;
-    private List<DatabaseHandler.Category> categories;
+    private List<DatabaseHandler.Product> objects;
 
-    CategoryAdapter(Context context, List<DatabaseHandler.Category> categoriesList) {
+    RecentAdapter(Context context, List<DatabaseHandler.Product> products) {
         ctx = context;
-        categories = categoriesList;
+        objects = products;
         lInflater = (LayoutInflater) ctx
                 .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
     }
 
-    // кол-во элементов
     @Override
     public int getCount() {
-        return categories.size();
+        return objects.size();
     }
 
     // элемент по позиции
     @Override
     public Object getItem(int position) {
-        return categories.get(position);
+        return objects.get(position);
     }
 
     // id по позиции
@@ -43,22 +46,24 @@ public class CategoryAdapter extends BaseAdapter {
     // пункт списка
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        // используем созданные, но не используемые view
+
         View view = convertView;
         if (view == null) {
-            view = lInflater.inflate(R.layout.category_item, parent, false);
+            view = lInflater.inflate(R.layout.product_item, parent, false);
         }
 
-        DatabaseHandler.Category c = getProduct(position);
+        DatabaseHandler.Product p = getProduct(position);
 
-        ((TextView) view.findViewById(R.id.category_name)).setText(c.getName());
-        ((ImageView) view.findViewById(R.id.category_icon)).setImageResource(c.getLocalIcon());
+        ((TextView) view.findViewById(R.id.product_name)).setText(p.getName());
+        ((TextView) view.findViewById(R.id.product_price)).setText(p.getPrice() + " BYN");
+        ((ImageView) view.findViewById(R.id.product_ivImage)).setImageResource(p.getLocalIcon());
+        view.setTag(p.getId());
         return view;
     }
 
 
     // товар по позиции
-    DatabaseHandler.Category getProduct(int position) {
-        return ((DatabaseHandler.Category) getItem(position));
+    DatabaseHandler.Product getProduct(int position) {
+        return ((DatabaseHandler.Product) getItem(position));
     }
 }

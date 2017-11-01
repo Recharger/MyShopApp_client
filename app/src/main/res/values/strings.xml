@@ -3,4 +3,7 @@
     <string name="title_categories">Categories</string>
     <string name="title_shop_list">Shopping list</string>
     <string name="title_about">About</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>
